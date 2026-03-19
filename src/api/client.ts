@@ -33,6 +33,10 @@ export async function fetchSessions(
   return request<BreathSessionListResponse>(`/breath_sessions/list${qs}`);
 }
 
+export async function fetchSession(id: string): Promise<BreathSession> {
+  return request<BreathSession>(`/breath_sessions/${id}`);
+}
+
 export async function patchSession(
   id: string,
   data: Partial<BreathSession>,
