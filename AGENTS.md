@@ -68,9 +68,14 @@ mind_mcp/
 
 | Document | Path | Description |
 |----------|------|-------------|
+| README | `README.md` | Project landing page |
+| Getting Started | `docs/getting-started.md` | Installation, setup, first steps |
+| Architecture | `docs/architecture.md` | Project structure and data flow |
+| Tools | `docs/tools.md` | MCP tools reference |
+| Configuration | `docs/configuration.md` | Environment variables, client setup |
 | CLAUDE.md | `CLAUDE.md` | Agent instructions and key conventions |
 | Description | `.ai-factory/DESCRIPTION.md` | Full project specification |
-| Architecture | `.ai-factory/ARCHITECTURE.md` | Architecture decisions |
+| Architecture (AI) | `.ai-factory/ARCHITECTURE.md` | Architecture decisions |
 
 ## AI Context Files
 

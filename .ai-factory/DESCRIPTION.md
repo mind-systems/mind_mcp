@@ -37,6 +37,7 @@ The PAT is sent as a Bearer token in all API requests. No OAuth flow.
 | `classify_session_time_of_day` | Analyse a session and return a suggested `timeOfDay` value |
 | `set_session_time_of_day` | Update a session's `timeOfDay` field via PATCH |
 | `classify_all_sessions` | Batch classify all unclassified sessions with confirmation |
+| `create_breath_session` | Design and persist a new breathing session via POST |
 
 ## Architecture Notes
 

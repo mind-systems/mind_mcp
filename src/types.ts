@@ -29,3 +29,10 @@ export interface BreathSessionListResponse {
   page: number;
   pageSize: number;
 }
+
+export interface CreateBreathSessionPayload {
+  description: string;
+  exercises: BreathExercise[];
+  shared?: boolean;
+  timeOfDay?: TimeOfDay;
+}

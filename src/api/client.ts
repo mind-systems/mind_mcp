@@ -1,4 +1,8 @@
-import type { BreathSession, BreathSessionListResponse } from "../types.js";
+import type {
+  BreathSession,
+  BreathSessionListResponse,
+  CreateBreathSessionPayload,
+} from "../types.js";
 
 const BASE_URL = process.env.MIND_API_URL;
 const TOKEN = process.env.MIND_PAT_TOKEN;
@@ -43,6 +47,15 @@ export async function patchSession(
 ): Promise<BreathSession> {
   return request<BreathSession>(`/breath_sessions/${id}`, {
     method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function createSession(
+  data: CreateBreathSessionPayload,
+): Promise<BreathSession> {
+  return request<BreathSession>("/breath_sessions", {
+    method: "POST",
     body: JSON.stringify(data),
   });
 }
