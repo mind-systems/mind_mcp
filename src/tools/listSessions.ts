@@ -13,11 +13,23 @@ export const listSessionsTool = {
   handler: async (input: { page?: number; pageSize?: number }) => {
     try {
       const result = await fetchSessions(input.page, input.pageSize);
+      const compact = {
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        data: result.data.map(({ id, description, complexity, timeOfDay, shared }) => ({
+          id,
+          description,
+          complexity,
+          timeOfDay,
+          shared,
+        })),
+      };
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(result, null, 2),
+            text: JSON.stringify(compact, null, 2),
           },
         ],
       };

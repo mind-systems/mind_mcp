@@ -6,7 +6,7 @@
 - [x] **AI Classification** — tools: `classify_session_time_of_day` (Claude analyses description + phases, returns suggestion), `set_session_time_of_day` (PATCH API), `classify_all_sessions` (batch with confirmation)
 
 - [x] **Session Creation Tool** — `create_breath_session` tool: AI agent designs breathing exercises based on user request (goal, difficulty, time of day); creates session via existing POST API endpoint
-- [ ] **Compact List & Detail Tool** — `list_my_breath_sessions` strips `exercises` from response (returns only id, description, complexity, timeOfDay, shared); new `get_breath_session(id)` tool for full session details on demand; no API changes, filtering done in MCP layer
+- [x] **Compact List & Detail Tool** — `list_my_breath_sessions` strips `exercises` from response (returns only id, description, complexity, timeOfDay, shared); new `get_breath_session(id)` tool for full session details on demand; no API changes, filtering done in MCP layer
 
 ## Completed
 

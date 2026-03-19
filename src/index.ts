@@ -5,6 +5,7 @@ import { classifySessionTool } from "./tools/classifySession.js";
 import { setTimeOfDayTool } from "./tools/setTimeOfDay.js";
 import { classifyAllTool } from "./tools/classifyAll.js";
 import { createSessionTool } from "./tools/createSession.js";
+import { getSessionTool } from "./tools/getSession.js";
 
 const server = new McpServer({ name: "mind-mcp", version: "1.0.0" });
 
@@ -41,6 +42,13 @@ server.tool(
   createSessionTool.description,
   createSessionTool.inputSchema,
   createSessionTool.handler,
+);
+
+server.tool(
+  getSessionTool.name,
+  getSessionTool.description,
+  getSessionTool.inputSchema,
+  getSessionTool.handler,
 );
 
 const transport = new StdioServerTransport();
