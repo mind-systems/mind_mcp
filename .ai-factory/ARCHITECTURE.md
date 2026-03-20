@@ -22,7 +22,9 @@ src/
 │   ├── listSessions.ts
 │   ├── classifySession.ts
 │   ├── setTimeOfDay.ts
-│   └── classifyAll.ts
+│   ├── classifyAll.ts
+│   ├── createSession.ts
+│   └── getSession.ts
 ├── api/               # HTTP client for Mind API
 │   └── client.ts      # All fetch() calls, auth header injection
 └── types.ts           # Shared TypeScript types (BreathSession, TimeOfDay, etc.)
@@ -71,19 +73,27 @@ index.ts
 ```typescript
 import { z } from "zod";
 import { fetchSessions } from "../api/client.js";
-import type { BreathSession } from "../types.js";
 
 export const listSessionsTool = {
   name: "list_my_breath_sessions",
-  description: "Fetch the authenticated user's breathing sessions.",
-  inputSchema: z.object({
-    limit: z.number().optional().describe("Max sessions to return"),
-  }),
-  handler: async (input: { limit?: number }) => {
+  description: "Fetch a compact list of the authenticated user's breathing sessions (id, description, complexity, timeOfDay, shared). Use get_breath_session for full details including exercises.",
+  inputSchema: {
+    page: z.number().optional().describe("Page number (1-based)"),
+    pageSize: z.number().optional().describe("Number of sessions per page"),
+  },
+  handler: async (input: { page?: number; pageSize?: number }) => {
     try {
-      const sessions: BreathSession[] = await fetchSessions(input.limit);
+      const result = await fetchSessions(input.page, input.pageSize);
+      const compact = {
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        data: result.data.map(({ id, description, complexity, timeOfDay, shared }) => ({
+          id, description, complexity, timeOfDay, shared,
+        })),
+      };
       return {
-        content: [{ type: "text" as const, text: JSON.stringify(sessions, null, 2) }],
+        content: [{ type: "text" as const, text: JSON.stringify(compact, null, 2) }],
       };
     } catch (err) {
       return {
@@ -98,6 +108,12 @@ export const listSessionsTool = {
 ### API client (src/api/client.ts)
 
 ```typescript
+import type {
+  BreathSession,
+  BreathSessionListResponse,
+  CreateBreathSessionPayload,
+} from "../types.js";
+
 const BASE_URL = process.env.MIND_API_URL;
 const TOKEN = process.env.MIND_PAT_TOKEN;
 
@@ -120,14 +136,28 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function fetchSessions(limit?: number): Promise<BreathSession[]> {
-  const qs = limit ? `?limit=${limit}` : "";
-  return request<BreathSession[]>(`/breath_sessions${qs}`);
+export async function fetchSessions(page?: number, pageSize?: number): Promise<BreathSessionListResponse> {
+  const params = new URLSearchParams();
+  if (page !== undefined) params.set("page", String(page));
+  if (pageSize !== undefined) params.set("pageSize", String(pageSize));
+  const qs = params.toString() ? `?${params.toString()}` : "";
+  return request<BreathSessionListResponse>(`/breath_sessions/list${qs}`);
+}
+
+export async function fetchSession(id: string): Promise<BreathSession> {
+  return request<BreathSession>(`/breath_sessions/${id}`);
 }
 
 export async function patchSession(id: string, data: Partial<BreathSession>): Promise<BreathSession> {
   return request<BreathSession>(`/breath_sessions/${id}`, {
     method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function createSession(data: CreateBreathSessionPayload): Promise<BreathSession> {
+  return request<BreathSession>("/breath_sessions", {
+    method: "POST",
     body: JSON.stringify(data),
   });
 }
@@ -142,15 +172,24 @@ import { listSessionsTool } from "./tools/listSessions.js";
 import { classifySessionTool } from "./tools/classifySession.js";
 import { setTimeOfDayTool } from "./tools/setTimeOfDay.js";
 import { classifyAllTool } from "./tools/classifyAll.js";
+import { createSessionTool } from "./tools/createSession.js";
+import { getSessionTool } from "./tools/getSession.js";
 
 const server = new McpServer({ name: "mind-mcp", version: "1.0.0" });
 
-for (const tool of [listSessionsTool, classifySessionTool, setTimeOfDayTool, classifyAllTool]) {
-  server.registerTool(tool.name, tool.description, tool.inputSchema, tool.handler);
-}
+server.tool(
+  listSessionsTool.name,
+  listSessionsTool.description,
+  listSessionsTool.inputSchema,
+  listSessionsTool.handler,
+);
+// ... same pattern for classifySessionTool, setTimeOfDayTool, classifyAllTool,
+//     createSessionTool, getSessionTool
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
+
+console.error("mind-mcp server started");
 ```
 
 ## Anti-Patterns

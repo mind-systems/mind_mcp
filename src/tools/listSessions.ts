@@ -8,7 +8,7 @@ const inputSchema = {
 
 export const listSessionsTool = {
   name: "list_my_breath_sessions",
-  description: "Fetch the authenticated user's breathing sessions.",
+  description: "Fetch a compact list of the authenticated user's breathing sessions (id, description, complexity, timeOfDay, shared). Use get_breath_session for full details including exercises.",
   inputSchema,
   handler: async (input: { page?: number; pageSize?: number }) => {
     try {
