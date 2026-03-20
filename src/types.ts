@@ -19,6 +19,7 @@ export interface BreathSession {
   complexity: number;
   shared: boolean;
   timeOfDay: TimeOfDay | null;
+  isStarred?: boolean;
   createdAt: string;
   updatedAt: string;
 }
