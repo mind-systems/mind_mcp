@@ -6,7 +6,8 @@ Mind MCP Server is a standalone TypeScript package that exposes Mind Awake API f
 
 ## Core Features
 
-- List authenticated user's breathing sessions
+- List and view breathing sessions (compact list + full detail)
+- Create new breathing sessions with AI-designed exercises
 - AI-assisted time-of-day classification (morning / midday / evening)
 - Update session `timeOfDay` field via PATCH
 - Batch classification of all unclassified sessions with confirmation
@@ -29,27 +30,9 @@ Environment-based:
 
 The PAT is sent as a Bearer token in all API requests. No OAuth flow.
 
-## MCP Tools
-
-| Tool | Description |
-|------|-------------|
-| `list_my_breath_sessions` | Fetch the authenticated user's breathing sessions |
-| `classify_session_time_of_day` | Analyse a session and return a suggested `timeOfDay` value |
-| `set_session_time_of_day` | Update a session's `timeOfDay` field via PATCH |
-| `classify_all_sessions` | Batch classify all unclassified sessions with confirmation |
-| `create_breath_session` | Design and persist a new breathing session via POST |
-
-## Architecture Notes
-
-- One file per tool in `src/tools/`, each exporting a tool definition object
-- Thin API client in `src/api/` — no heavy HTTP libraries, native `fetch`
-- All responses follow MCP tool result format (`content` array with `type: "text"`)
-- Errors caught and returned as tool error results, never thrown
-- Depends on `mind_api` for PAT endpoints and breath session endpoints
-
 ## Architecture
-See `.ai-factory/ARCHITECTURE.md` for detailed architecture guidelines.
-Pattern: Layered Architecture
+
+See `ARCHITECTURE.md` for folder structure, dependency rules, and code patterns. Pattern: Layered Architecture.
 
 ## Non-Functional Requirements
 

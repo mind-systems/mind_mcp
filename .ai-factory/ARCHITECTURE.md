@@ -19,16 +19,16 @@ Each MCP tool is a thin slice through the layers: it receives a call from the MC
 src/
 ├── index.ts           # Entry point — creates McpServer, registers tools, connects transport
 ├── tools/             # MCP tool definitions (one file per tool)
-│   ├── listSessions.ts
-│   ├── classifySession.ts
-│   ├── setTimeOfDay.ts
-│   ├── classifyAll.ts
-│   ├── createSession.ts
-│   └── getSession.ts
+│   └── <toolName>.ts  # Each tool exports { name, description, inputSchema, handler }
 ├── api/               # HTTP client for Mind API
 │   └── client.ts      # All fetch() calls, auth header injection
-└── types.ts           # Shared TypeScript types (BreathSession, TimeOfDay, etc.)
+└── types.ts           # Shared TypeScript types
 ```
+
+**Where to put new code:**
+- New MCP tool → `src/tools/<toolName>.ts`, then register in `index.ts`
+- New API endpoint call → add function to `src/api/client.ts`
+- New shared type → `src/types.ts`
 
 ## Dependency Rules
 
