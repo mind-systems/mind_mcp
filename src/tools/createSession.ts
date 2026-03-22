@@ -12,7 +12,7 @@ const inputSchema = {
           .array(
             z.object({
               type: z.enum(["inhale", "exhale", "hold"]),
-              duration: z.number().min(0).describe("Duration in milliseconds"),
+              duration: z.number().min(0).describe("Duration in seconds"),
             }),
           )
           .min(1)
@@ -20,7 +20,7 @@ const inputSchema = {
         restDuration: z
           .number()
           .min(0)
-          .describe("Rest between repeats in milliseconds"),
+          .describe("Rest between repeats in seconds"),
         repeatCount: z
           .number()
           .min(1)
@@ -47,7 +47,7 @@ export const createSessionTool = {
     "desired difficulty, and time of day — this tool handles validation and API submission. " +
     "\n\nExercise structure: each exercise has a `steps` array (sequence of inhale/exhale/hold steps), " +
     "a `restDuration` (milliseconds of rest between repeats), and a `repeatCount` (how many times to repeat). " +
-    "\n\nTypical ranges: step durations 1000–10000ms, rest 1000–5000ms, repeatCount 1–10. " +
+    "\n\nTypical ranges: step durations 1–10s, rest 1–5s, repeatCount 1–10. " +
     "Do NOT provide a `complexity` field — it is computed server-side. " +
     "\n\nExamples of exercise design by goal:\n" +
     "- Calming/sleep (evening): slow exhales longer than inhales, low repeatCount, generous rest\n" +
