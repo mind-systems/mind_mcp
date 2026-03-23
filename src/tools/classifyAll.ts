@@ -48,7 +48,7 @@ export const classifyAllTool = {
     "in a single batch for the LLM to classify. Returns a formatted list asking for " +
     "morning/midday/evening suggestions for each session, to be confirmed before applying.",
   inputSchema,
-  handler: async (_input: Record<string, never>) => {
+  handler: async () => {
     try {
       const allSessions = await fetchAllSessions();
       const unclassified = allSessions.filter(
