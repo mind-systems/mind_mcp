@@ -8,7 +8,7 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 jobs:
   publish:
@@ -32,6 +32,15 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Bump version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version patch --no-git-tag-version
+          git add package.json package-lock.json
+          git commit -m "chore: bump version [skip ci]"
+          git push
 
       - name: Publish (latest)
         if: github.ref_name == 'main'
