@@ -1,6 +1,6 @@
 {
   "name": "@mind-awake.life/mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for Mind Awake",
   "license": "MIT",
   "repository": {
@@ -8,11 +8,18 @@
     "url": "https://github.com/mind-systems/mind_mcp"
   },
   "homepage": "https://mind-awake.life/",
-  "keywords": ["mcp", "mind-awake", "breathing", "claude"],
+  "keywords": [
+    "mcp",
+    "mind-awake",
+    "breathing",
+    "claude"
+  ],
   "bin": {
     "mind-mcp": "dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
   },
