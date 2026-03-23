@@ -36,64 +36,39 @@ npm run build
 POST /auth/tokens
 ```
 
-## Настройка окружения
-
-Задайте две обязательные переменные:
-
-```bash
-export MIND_API_URL=http://localhost:3000
-export MIND_PAT_TOKEN=pat_ваш_токен
-```
-
-Подробнее о всех параметрах — в разделе [Конфигурация](configuration.md).
-
-## Запуск
-
-```bash
-npm start
-```
-
-Сервер использует stdio-транспорт — он предназначен для запуска MCP-клиентом, а не вручную. При ручном запуске сервер будет ожидать JSON-RPC сообщения на stdin.
-
 ## Подключение к MCP-клиенту
 
-### Claude Desktop
+Сервер использует stdio-транспорт — запускается MCP-клиентом автоматически, не вручную.
 
-Добавьте в `claude_desktop_config.json`:
+### Prod
 
-```json
-{
-  "mcpServers": {
-    "mind": {
-      "command": "node",
-      "args": ["/абсолютный/путь/к/mind_mcp/dist/index.js"],
-      "env": {
-        "MIND_API_URL": "http://localhost:3000",
-        "MIND_PAT_TOKEN": "pat_ваш_токен"
-      }
-    }
-  }
-}
+```bash
+claude mcp add mind npx @mind-awake.life/mcp \
+  -e MIND_API_URL=https://api.mind-awake.life \
+  -e MIND_PAT_TOKEN=pat_ваш_токен
 ```
 
-### Claude Code
+### Dev
 
-Добавьте в `.mcp.json` проекта или в глобальные настройки:
-
-```json
-{
-  "mcpServers": {
-    "mind": {
-      "command": "node",
-      "args": ["./mind_mcp/dist/index.js"],
-      "env": {
-        "MIND_API_URL": "http://localhost:3000",
-        "MIND_PAT_TOKEN": "pat_ваш_токен"
-      }
-    }
-  }
-}
+```bash
+claude mcp add mind npx @mind-awake.life/mcp@dev \
+  -e MIND_API_URL=https://dev-api.mind-awake.life \
+  -e MIND_PAT_TOKEN=pat_ваш_токен
 ```
+
+### Локальная разработка
+
+```bash
+npm run build
+
+claude mcp add mind node ./dist/index.js \
+  -e MIND_API_URL=http://localhost:3001 \
+  -e MIND_PAT_TOKEN=pat_ваш_токен
+```
+
+Для глобальной установки (доступен во всех проектах) добавьте флаг `-s user`.
+
+Подробнее о переменных окружения — в разделе [Конфигурация](configuration.md).
 
 ## Проверка
 

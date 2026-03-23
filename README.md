@@ -4,33 +4,34 @@
 
 Standalone TypeScript-пакет, который предоставляет функциональность Mind Awake API через протокол [MCP (Model Context Protocol)](https://modelcontextprotocol.io/). Позволяет AI-ассистентам просматривать, классифицировать и обновлять дыхательные сессии пользователя.
 
-## Быстрый старт
+## Установка
+
+**Для пользователей (prod):**
 
 ```bash
-npm install
+claude mcp add mind npx @mind-awake.life/mcp \
+  -e MIND_API_URL=https://api.mind-awake.life \
+  -e MIND_PAT_TOKEN=pat_xxx
+```
+
+**Для пользователей (dev/бета):**
+
+```bash
+claude mcp add mind npx @mind-awake.life/mcp@dev \
+  -e MIND_API_URL=https://dev-api.mind-awake.life \
+  -e MIND_PAT_TOKEN=pat_xxx
+```
+
+**Для локальной разработки:**
+
+```bash
+# собрать пакет
 npm run build
-```
 
-Установить мцп в клода:
-
-claude mcp add mind node /Users/max/projects/mind/mind_mcp/dist/index.js \
+# подключить локально
+claude mcp add mind node ./dist/index.js \
   -e MIND_API_URL=http://localhost:3001 \
-  -e MIND_PAT_TOKEN=pat_твой_токен
-  -s user
-
-Или сложней:
-
-Задайте переменные окружения:
-
-```bash
-export MIND_API_URL=http://localhost:3000
-export MIND_PAT_TOKEN=pat_ваш_токен
-```
-
-Запуск:
-
-```bash
-npm start
+  -e MIND_PAT_TOKEN=pat_xxx
 ```
 
 ## Возможности
@@ -44,25 +45,6 @@ npm start
 "покажи мои дыхательные сессии"
 "создай дыхательную сессию на утро"
 "классифицируй все неразмеченные сессии"
-
-## Пример
-
-Добавьте сервер в конфигурацию MCP-клиента (Claude Desktop, Claude Code и др.):
-
-```json
-{
-  "mcpServers": {
-    "mind": {
-      "command": "node",
-      "args": ["/path/to/mind_mcp/dist/index.js"],
-      "env": {
-        "MIND_API_URL": "http://localhost:3000",
-        "MIND_PAT_TOKEN": "pat_ваш_токен"
-      }
-    }
-  }
-}
-```
 
 После подключения AI-ассистент получит доступ к инструментам: `list_my_breath_sessions`, `get_breath_session`, `create_breath_session`, `classify_session_time_of_day`, `set_session_time_of_day`, `classify_all_sessions`.
 
@@ -78,4 +60,4 @@ npm start
 
 ## Лицензия
 
-Private
+MIT
