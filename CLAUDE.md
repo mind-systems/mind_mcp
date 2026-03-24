@@ -27,3 +27,10 @@ See `.ai-factory/ARCHITECTURE.md` for folder structure, dependency rules, and co
   - The `timeOfDay` field on breath sessions
 
 DTO shapes consumed here must stay in sync with the API response contracts.
+
+## Proto contract ownership
+
+`mind_api/proto/` is the single source of truth. This project **must not modify `.proto` files**.
+
+- When `mind_api/proto/` changes, copy the updated files into `mind_mcp/proto/` and run `npm run proto:gen` to regenerate stubs.
+- Never symlink — copy explicitly so the proto snapshot in this repo is stable and independent of `mind_api` checkout state.
