@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createSession } from "../api/client.js";
+import { createSession } from "../api/grpc-client.js";
 
 const inputSchema = {
   description: z
