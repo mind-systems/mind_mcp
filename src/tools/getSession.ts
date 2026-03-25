@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { fetchSession } from "../api/client.js";
+import { fetchSession } from "../api/grpc-client.js";
 
 const inputSchema = {
   id: z.string().describe("ID of the breath session to retrieve"),
