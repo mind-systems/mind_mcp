@@ -236,7 +236,7 @@ function buildUpdateRequest(
   return req;
 }
 
-// ---- Exported functions (same signatures as client.ts) ----
+// ---- Exported functions ----
 
 export async function fetchSessions(
   page?: number,

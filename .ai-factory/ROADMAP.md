@@ -32,7 +32,7 @@ One tool at a time — each is a self-contained file in `src/tools/`.
 
 ### 5.6 Cleanup
 
-- [ ] **Delete `src/api/client.ts` and verify** — delete only after all 6 tools are migrated; confirm no remaining `MIND_API_URL` references with `grep -r "MIND_API_URL" src/`
+- [x] **Delete `src/api/client.ts` and verify** — delete only after all 6 tools are migrated; confirm no remaining `MIND_API_URL` references with `grep -r "MIND_API_URL" src/`
 
 ---
 
@@ -40,3 +40,4 @@ One tool at a time — each is a self-contained file in `src/tools/`.
 
 | Milestone | Date |
 |-----------|------|
+| 5.6 Delete src/api/client.ts and verify | 2026-03-25 |

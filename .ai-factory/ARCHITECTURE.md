@@ -4,12 +4,12 @@
 
 The Mind MCP Server uses a simple layered architecture. The server is a thin integration layer — it adapts the Mind API into MCP tools. There is no complex business logic, no database, and no domain model to enforce. Layered architecture provides just enough structure to keep the code organized and readable without adding unnecessary abstraction overhead.
 
-Each MCP tool is a thin slice through the layers: it receives a call from the MCP client, delegates to the API client for HTTP, and returns a formatted result.
+Each MCP tool is a thin slice through the layers: it receives a call from the MCP client, delegates to the API client, and returns a formatted result.
 
 ## Decision Rationale
 
-- **Project type:** MCP integration server (thin HTTP client wrapper)
-- **Tech stack:** TypeScript, Node.js, `@modelcontextprotocol/sdk`, native `fetch`
+- **Project type:** MCP integration server (thin gRPC client wrapper)
+- **Tech stack:** TypeScript, Node.js, `@modelcontextprotocol/sdk`, `@grpc/grpc-js`
 - **Key factor:** No domain logic — all "logic" lives in the Mind API. The MCP server only adapts and routes.
 - **Team:** Solo developer
 
@@ -21,8 +21,7 @@ src/
 ├── tools/             # MCP tool definitions (one file per tool)
 │   └── <toolName>.ts  # Each tool exports { name, description, inputSchema, handler }
 ├── api/               # API clients for Mind API
-│   ├── client.ts       # REST client (to be removed after full migration — roadmap 5.6)
-│   ├── grpc-client.ts  # gRPC client (new, same 4 exported functions as client.ts)
+│   ├── grpc-client.ts  # gRPC client — exports fetchSessions, fetchSession, patchSession, createSession
 │   └── grpc-error.ts   # gRPC status code → Error mapper
 ├── generated/         # ts-proto generated stubs (do not edit)
 └── types.ts           # Shared TypeScript types
@@ -30,17 +29,14 @@ src/
 
 **Where to put new code:**
 - New MCP tool → `src/tools/<toolName>.ts`, then register in `index.ts`
-- New API endpoint call → add function to `src/api/grpc-client.ts` (new) or `src/api/client.ts` (REST, legacy)
+- New API endpoint call → add function to `src/api/grpc-client.ts`
 - New shared type → `src/types.ts`
-
-> Note: `api/client.ts` will be deleted after roadmap step 5.6. At that point remove it from the folder structure above, remove the REST dependency rules below, and simplify the env docs.
 
 ## Dependency Rules
 
 - `index.ts` → `tools/*` (imports tool definitions to register them)
-- `tools/*` → `api/client.ts` or `api/grpc-client.ts` (calls API client to fetch/update data)
+- `tools/*` → `api/grpc-client.ts` (calls API client to fetch/update data)
 - `tools/*` → `types.ts` (uses shared types)
-- `api/client.ts` → `types.ts` (uses shared types)
 - `api/grpc-client.ts` → `api/grpc-error.ts` (error mapping)
 - `api/grpc-client.ts` → `generated/*` (uses ts-proto stubs)
 - `api/grpc-client.ts` → `types.ts` (uses shared types)
@@ -48,36 +44,32 @@ src/
 ```
 index.ts
   └── tools/*
-        └── api/client.ts          (REST, legacy — to be removed after 5.6)
-              └── (fetch — native)
-        └── api/grpc-client.ts     (gRPC, new)
+        └── api/grpc-client.ts
               └── api/grpc-error.ts
               └── generated/*
         └── types.ts
 ```
 
 - ✅ `tools` may import from `api/` and `types`
-- ✅ `api/client.ts` may import from `types`
 - ✅ `api/grpc-client.ts` may import from `api/grpc-error.ts`, `generated/*`, and `types`
-- ❌ `api/client.ts` must NOT import from `tools/`
 - ❌ `api/grpc-client.ts` must NOT import from `tools/`
-- ❌ `index.ts` must NOT call `fetch` or gRPC directly — go through `api/`
+- ❌ `index.ts` must NOT call gRPC directly — go through `api/`
 - ❌ `types.ts` must NOT import from anywhere else in the project
 
 ## Layer Communication
 
 - **MCP client → `index.ts`**: via MCP stdio protocol
 - **`index.ts` → tools**: direct function/object import at startup (tool registration)
-- **tools → `api/client.ts`**: direct function call (async/await)
-- **`api/client.ts` → Mind API**: `fetch()` with Bearer token from env
+- **tools → `api/grpc-client.ts`**: direct function call (async/await)
+- **`api/grpc-client.ts` → Mind API**: gRPC calls with Bearer token from env
 
 ## Key Principles
 
 1. **One file per tool** — each tool in `src/tools/` exports a single tool definition object. No shared state between tools.
-2. **API client is the only HTTP boundary** — all `fetch()` calls live in `src/api/client.ts`. Tools never call `fetch` directly.
-3. **Errors never throw past tools** — all errors from `api/client.ts` are caught in the tool and returned as MCP error results (`isError: true`).
+2. **API client is the only API boundary** — all gRPC calls live in `src/api/grpc-client.ts`. Tools never call gRPC directly.
+3. **Errors never throw past tools** — all errors from `api/grpc-client.ts` are caught in the tool and returned as MCP error results (`isError: true`).
 4. **stdout is reserved for MCP protocol** — never `console.log()` to stdout. Use `console.error()` for debugging (goes to stderr).
-5. **Config from env only** — `MIND_API_URL` and `MIND_PAT_TOKEN` are read once at startup in `api/client.ts`. Never hardcoded, never logged.
+5. **Config from env only** — `MIND_GRPC_URL`, `MIND_GRPC_TLS`, and `MIND_PAT_TOKEN` are read once at startup in `api/grpc-client.ts`. Never hardcoded, never logged.
 
 ## Code Examples
 
@@ -85,7 +77,7 @@ index.ts
 
 ```typescript
 import { z } from "zod";
-import { fetchSessions } from "../api/client.js";
+import { fetchSessions } from "../api/grpc-client.js";
 
 export const listSessionsTool = {
   name: "list_my_breath_sessions",
@@ -118,63 +110,11 @@ export const listSessionsTool = {
 };
 ```
 
-### API client (src/api/client.ts)
+### API client (src/api/grpc-client.ts)
 
-```typescript
-import type {
-  BreathSession,
-  BreathSessionListResponse,
-  CreateBreathSessionPayload,
-} from "../types.js";
+The gRPC client reads `MIND_GRPC_URL`, `MIND_GRPC_TLS`, and `MIND_PAT_TOKEN` from the environment at startup. It injects the PAT as a Bearer token via `grpc.credentials.createFromMetadataGenerator()` combined with channel credentials — authentication is automatic on every call, no per-call Metadata needed.
 
-const BASE_URL = process.env.MIND_API_URL;
-const TOKEN = process.env.MIND_PAT_TOKEN;
-
-if (!BASE_URL || !TOKEN) {
-  throw new Error("MIND_API_URL and MIND_PAT_TOKEN must be set");
-}
-
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${TOKEN}`,
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-  if (!res.ok) {
-    throw new Error(`API error ${res.status}: ${await res.text()}`);
-  }
-  return res.json() as Promise<T>;
-}
-
-export async function fetchSessions(page?: number, pageSize?: number): Promise<BreathSessionListResponse> {
-  const params = new URLSearchParams();
-  if (page !== undefined) params.set("page", String(page));
-  if (pageSize !== undefined) params.set("pageSize", String(pageSize));
-  const qs = params.toString() ? `?${params.toString()}` : "";
-  return request<BreathSessionListResponse>(`/breath_sessions/list${qs}`);
-}
-
-export async function fetchSession(id: string): Promise<BreathSession> {
-  return request<BreathSession>(`/breath_sessions/${id}`);
-}
-
-export async function patchSession(id: string, data: Partial<BreathSession>): Promise<BreathSession> {
-  return request<BreathSession>(`/breath_sessions/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-}
-
-export async function createSession(data: CreateBreathSessionPayload): Promise<BreathSession> {
-  return request<BreathSession>("/breath_sessions", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-```
+It exports the same four functions used by all tools: `fetchSessions`, `fetchSession`, `patchSession`, `createSession`.
 
 ### Tool registration (src/index.ts)
 
@@ -208,7 +148,7 @@ console.error("mind-mcp server started");
 ## Anti-Patterns
 
 - ❌ Don't add a `services/` layer — there is no business logic to put there
-- ❌ Don't call `fetch()` inside a tool file — always go through `api/client.ts`
+- ❌ Don't call gRPC inside a tool file — always go through `api/grpc-client.ts`
 - ❌ Don't use `console.log()` — it corrupts the MCP stdio stream; use `console.error()` only
 - ❌ Don't share mutable state between tool handlers — each call must be stateless
 - ❌ Don't throw errors out of a tool handler — catch and return `isError: true` result

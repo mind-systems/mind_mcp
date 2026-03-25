@@ -44,7 +44,8 @@ POST /auth/tokens
 
 ```bash
 claude mcp add mind npx @mind-awake.life/mcp \
-  -e MIND_API_URL=https://api.mind-awake.life \
+  -e MIND_GRPC_URL=grpc.mind-awake.life:443 \
+  -e MIND_GRPC_TLS=true \
   -e MIND_PAT_TOKEN=pat_ваш_токен
 ```
 
@@ -52,7 +53,8 @@ claude mcp add mind npx @mind-awake.life/mcp \
 
 ```bash
 claude mcp add mind npx @mind-awake.life/mcp@dev \
-  -e MIND_API_URL=https://dev-api.mind-awake.life \
+  -e MIND_GRPC_URL=dev-grpc.mind-awake.life:443 \
+  -e MIND_GRPC_TLS=true \
   -e MIND_PAT_TOKEN=pat_ваш_токен
 ```
 
@@ -62,7 +64,8 @@ claude mcp add mind npx @mind-awake.life/mcp@dev \
 npm run build
 
 claude mcp add mind node ./dist/index.js \
-  -e MIND_API_URL=http://localhost:3001 \
+  -e MIND_GRPC_URL=localhost:50051 \
+  -e MIND_GRPC_TLS=false \
   -e MIND_PAT_TOKEN=pat_ваш_токен
 ```
 

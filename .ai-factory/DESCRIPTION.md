@@ -18,8 +18,7 @@ Mind MCP Server is a standalone TypeScript package that exposes Mind Awake API f
 - **Runtime:** Node.js
 - **Protocol:** MCP (Model Context Protocol) via `@modelcontextprotocol/sdk`
 - **Transport:** stdio (launched by MCP client)
-- **HTTP Client:** Native `fetch` (no heavy libraries)
-- **gRPC Client:** `@grpc/grpc-js` (for future gRPC communication with Mind API)
+- **gRPC Client:** `@grpc/grpc-js` (for gRPC communication with Mind API)
 - **Proto Code Generation:** `ts-proto` (generates TypeScript stubs from `.proto` files)
 - **Build:** TypeScript compiler (`tsc`)
 - **Linting:** ESLint + Prettier
@@ -27,14 +26,11 @@ Mind MCP Server is a standalone TypeScript package that exposes Mind Awake API f
 ## Authentication
 
 Environment-based:
-- `MIND_API_URL` — base URL of the Mind API (e.g. `http://localhost:3000`) — REST client
-- `MIND_GRPC_URL` — gRPC server address (e.g. `localhost:50051`) — gRPC client
-- `MIND_GRPC_TLS` — `"true"` to enable TLS on the gRPC channel, defaults to `"false"` — gRPC client
-- `MIND_PAT_TOKEN` — Personal Access Token (`pat_` prefix) issued by `POST /auth/tokens` — shared by both clients
+- `MIND_GRPC_URL` — gRPC server address (e.g. `localhost:50051`)
+- `MIND_GRPC_TLS` — `"true"` to enable TLS on the gRPC channel, defaults to `"false"`
+- `MIND_PAT_TOKEN` — Personal Access Token (`pat_` prefix) issued by `POST /auth/tokens`
 
 The PAT is sent as a Bearer token in all API requests. No OAuth flow.
-
-During the transition period (roadmap steps 5.4–5.6) both REST and gRPC env vars are needed — tools import from `client.ts` (REST) until individually migrated to `grpc-client.ts`.
 
 ## Architecture
 
