@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { fetchSessions } from "../api/client.js";
+import { fetchSessions } from "../api/grpc-client.js";
 
 const inputSchema = {
   page: z.number().optional().describe("Page number (1-based)"),

@@ -23,7 +23,7 @@
 
 One tool at a time — each is a self-contained file in `src/tools/`.
 
-- [ ] **Migrate `src/tools/listSessions.ts`** — replace `client.get('/breath_sessions/list', ...)` with `grpcClient.listSessions(...)`; map `ListSessionsResponse` to the same output shape
+- [x] **Migrate `src/tools/listSessions.ts`** — replace `client.get('/breath_sessions/list', ...)` with `grpcClient.listSessions(...)`; map `ListSessionsResponse` to the same output shape
 - [ ] **Migrate `src/tools/getSession.ts`** — replace `client.get('/breath_sessions/${id}')` with `grpcClient.getSession({ id })`; map response
 - [ ] **Migrate `src/tools/createSession.ts`** — replace `client.post('/breath_sessions', body)` with `grpcClient.createSession(request)`; map request fields to proto message
 - [ ] **Migrate `src/tools/classifySession.ts`** — replace REST fetch with `grpcClient.getSession({ id })`; LLM formatting logic unchanged
