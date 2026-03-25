@@ -13,7 +13,7 @@
 ### 5.3 Proto codegen setup
 
 - [x] **Copy proto files and create gen script** — create `mind_mcp/proto/`, copy `breath_sessions.proto` and `auth.proto` from `mind_api/proto/`; create `scripts/gen_proto.sh` that runs `protoc --plugin=ts-proto --ts_proto_out=src/generated/ proto/*.proto`; add `proto:gen` script to `package.json` and document in `CLAUDE.md`
-- [ ] **Run codegen** — execute script, commit `src/generated/` to repo
+- [x] **Run codegen** — execute script, commit `src/generated/` to repo
 
 ### 5.4 Create GrpcClient for mind_mcp
 
