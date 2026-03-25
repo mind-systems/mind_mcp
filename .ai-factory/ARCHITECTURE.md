@@ -20,35 +20,48 @@ src/
 ├── index.ts           # Entry point — creates McpServer, registers tools, connects transport
 ├── tools/             # MCP tool definitions (one file per tool)
 │   └── <toolName>.ts  # Each tool exports { name, description, inputSchema, handler }
-├── api/               # HTTP client for Mind API
-│   └── client.ts      # All fetch() calls, auth header injection
+├── api/               # API clients for Mind API
+│   ├── client.ts       # REST client (to be removed after full migration — roadmap 5.6)
+│   ├── grpc-client.ts  # gRPC client (new, same 4 exported functions as client.ts)
+│   └── grpc-error.ts   # gRPC status code → Error mapper
+├── generated/         # ts-proto generated stubs (do not edit)
 └── types.ts           # Shared TypeScript types
 ```
 
 **Where to put new code:**
 - New MCP tool → `src/tools/<toolName>.ts`, then register in `index.ts`
-- New API endpoint call → add function to `src/api/client.ts`
+- New API endpoint call → add function to `src/api/grpc-client.ts` (new) or `src/api/client.ts` (REST, legacy)
 - New shared type → `src/types.ts`
+
+> Note: `api/client.ts` will be deleted after roadmap step 5.6. At that point remove it from the folder structure above, remove the REST dependency rules below, and simplify the env docs.
 
 ## Dependency Rules
 
 - `index.ts` → `tools/*` (imports tool definitions to register them)
-- `tools/*` → `api/client.ts` (calls HTTP client to fetch/update data)
+- `tools/*` → `api/client.ts` or `api/grpc-client.ts` (calls API client to fetch/update data)
 - `tools/*` → `types.ts` (uses shared types)
 - `api/client.ts` → `types.ts` (uses shared types)
+- `api/grpc-client.ts` → `api/grpc-error.ts` (error mapping)
+- `api/grpc-client.ts` → `generated/*` (uses ts-proto stubs)
+- `api/grpc-client.ts` → `types.ts` (uses shared types)
 
 ```
 index.ts
   └── tools/*
-        └── api/client.ts
+        └── api/client.ts          (REST, legacy — to be removed after 5.6)
               └── (fetch — native)
+        └── api/grpc-client.ts     (gRPC, new)
+              └── api/grpc-error.ts
+              └── generated/*
         └── types.ts
 ```
 
 - ✅ `tools` may import from `api/` and `types`
 - ✅ `api/client.ts` may import from `types`
+- ✅ `api/grpc-client.ts` may import from `api/grpc-error.ts`, `generated/*`, and `types`
 - ❌ `api/client.ts` must NOT import from `tools/`
-- ❌ `index.ts` must NOT call `fetch` directly — go through `api/client.ts`
+- ❌ `api/grpc-client.ts` must NOT import from `tools/`
+- ❌ `index.ts` must NOT call `fetch` or gRPC directly — go through `api/`
 - ❌ `types.ts` must NOT import from anywhere else in the project
 
 ## Layer Communication

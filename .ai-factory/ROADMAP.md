@@ -17,7 +17,7 @@
 
 ### 5.4 Create GrpcClient for mind_mcp
 
-- [ ] **Create `src/api/grpc-client.ts`** — reads `MIND_GRPC_URL`, `MIND_PAT_TOKEN`, `MIND_GRPC_TLS` env vars; PAT injected via `grpc.credentials.createFromMetadataGenerator()` combined with channel credentials (automatic on every call, no per-call Metadata); exports same 4 function signatures as current `client.ts` so tool files need no changes; update `.env.example` replacing `MIND_API_URL` with `MIND_GRPC_URL`; see `.ai-factory/notes/01-grpc-client-setup.md` for credential wiring and error mapping details
+- [x] **Create `src/api/grpc-client.ts`** — reads `MIND_GRPC_URL`, `MIND_PAT_TOKEN`, `MIND_GRPC_TLS` env vars; PAT injected via `grpc.credentials.createFromMetadataGenerator()` combined with channel credentials (automatic on every call, no per-call Metadata); exports same 4 function signatures as current `client.ts` so tool files need no changes; update `.env.example` replacing `MIND_API_URL` with `MIND_GRPC_URL`; see `.ai-factory/notes/01-grpc-client-setup.md` for credential wiring and error mapping details
 
 ### 5.5 Migrate each tool
 

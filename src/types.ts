@@ -2,7 +2,7 @@ export type TimeOfDay = "morning" | "midday" | "evening";
 
 export interface BreathStep {
   type: "inhale" | "exhale" | "hold";
-  duration: number; // milliseconds
+  duration: number; // seconds
 }
 
 export interface BreathExercise {
