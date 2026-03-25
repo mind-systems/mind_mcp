@@ -13,6 +13,9 @@ npm start                  # Run compiled output (stdio transport)
 # Linting & formatting
 npm run lint               # ESLint --fix
 npm run format             # Prettier
+
+# Proto
+npm run proto:gen          # Regenerate TypeScript stubs from proto/*.proto
 ```
 
 ## Architecture
