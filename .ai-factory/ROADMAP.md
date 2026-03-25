@@ -8,7 +8,7 @@
 
 ### 5.2 Install dependencies
 
-- [ ] **Install gRPC packages** — `npm install @grpc/grpc-js && npm install --save-dev ts-proto` inside `mind_mcp/`
+- [x] **Install gRPC packages** — `npm install @grpc/grpc-js && npm install --save-dev ts-proto` inside `mind_mcp/`
 
 ### 5.3 Proto codegen setup
 

@@ -19,6 +19,8 @@ Mind MCP Server is a standalone TypeScript package that exposes Mind Awake API f
 - **Protocol:** MCP (Model Context Protocol) via `@modelcontextprotocol/sdk`
 - **Transport:** stdio (launched by MCP client)
 - **HTTP Client:** Native `fetch` (no heavy libraries)
+- **gRPC Client:** `@grpc/grpc-js` (for future gRPC communication with Mind API)
+- **Proto Code Generation:** `ts-proto` (generates TypeScript stubs from `.proto` files)
 - **Build:** TypeScript compiler (`tsc`)
 - **Linting:** ESLint + Prettier
 
