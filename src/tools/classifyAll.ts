@@ -1,4 +1,4 @@
-import { fetchSessions } from "../api/client.js";
+import { fetchSessions } from "../api/grpc-client.js";
 import type { BreathSession } from "../types.js";
 
 const inputSchema = {};
