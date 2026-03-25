@@ -28,7 +28,7 @@ One tool at a time — each is a self-contained file in `src/tools/`.
 - [x] **Migrate `src/tools/createSession.ts`** — replace `client.post('/breath_sessions', body)` with `grpcClient.createSession(request)`; map request fields to proto message
 - [x] **Migrate `src/tools/classifySession.ts`** — replace REST fetch with `grpcClient.getSession({ id })`; LLM formatting logic unchanged
 - [x] **Migrate `src/tools/classifyAll.ts`** — replace paginated REST fetch loop with `grpcClient.listSessions(...)` calls; batch logic unchanged
-- [ ] **Migrate `src/tools/setTimeOfDay.ts`** — replace `client.patch('/breath_sessions/${id}', { timeOfDay })` with `grpcClient.updateSession({ id, timeOfDay })`
+- [x] **Migrate `src/tools/setTimeOfDay.ts`** — replace `client.patch('/breath_sessions/${id}', { timeOfDay })` with `grpcClient.updateSession({ id, timeOfDay })`
 
 ### 5.6 Cleanup
 

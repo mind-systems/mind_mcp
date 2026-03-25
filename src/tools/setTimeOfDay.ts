@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { patchSession } from "../api/client.js";
+import { patchSession } from "../api/grpc-client.js";
 
 const inputSchema = {
   sessionId: z.string().describe("The ID of the breathing session to update"),
