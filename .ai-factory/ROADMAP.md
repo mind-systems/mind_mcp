@@ -36,6 +36,20 @@ One tool at a time — each is a self-contained file in `src/tools/`.
 
 ---
 
+## Phase 6 — Cursor + Sections Migration (mind_api Phase 33)
+
+Breaking proto change from API team: `ListSessionsRequest/Response` drop offset pagination in favour of an opaque cursor; each response item now carries a `SessionSection` tag.
+
+- [ ] **Copy updated proto and regenerate stubs** — `proto/breath_sessions.proto` is out of sync with `mind_api/proto/` after Phase 33 — copy verbatim from `mind_api/proto/breath_sessions.proto` (single source of truth); run `npm run proto:gen` (verify script name in `package.json`) to regenerate `src/generated/breath_sessions.ts`; commit both files together; do not edit generated files by hand. No TypeScript changes in this milestone. Spec: `.ai-factory/notes/02-proto-copy-cursor-regen.md`.
+
+- [ ] **Update `BreathSessionListResponse` in `src/types.ts`** — `BreathSessionListResponse` still has `data: BreathSession[]; total; page; pageSize` — remove all four fields; add `SessionSection = 'STARRED' | 'MINE' | 'SHARED'` type and `SessionListItem { session: BreathSession; section: SessionSection }` interface; replace `BreathSessionListResponse` with `{ items: SessionListItem[]; nextCursor: string | undefined }`. Note: breaks `grpc-client.ts` and `listSessions.ts` compilation until subsequent milestones are done. Spec: `.ai-factory/notes/03-types-cursor-contract.md`.
+
+- [ ] **Update `fetchSessions` in `src/api/grpc-client.ts`** — `fetchSessions` (~line 241) takes a `page` param and maps `resp.data / resp.total / resp.page / resp.pageSize` — remove `page` param; call with `{ cursor: undefined, pageSize }` (first page only, never follow cursor); add `mapSection(ProtoSessionSection): SessionSection` helper using the proto-generated enum; map `resp.items` with `mapSessionWithStarred`; return `{ items, nextCursor }`. Guard: check generated TS enum values (may be numeric 0/1/2) before writing the switch cases. Spec: `.ai-factory/notes/04-grpc-client-cursor-fetch.md`.
+
+- [ ] **Update `src/tools/listSessions.ts` for cursor response shape** — input schema includes `page` and handler maps `result.data` — remove `page` from `inputSchema`; update handler to iterate `result.items` destructuring `{ session, section }`; add `section` to each compact output item; update tool `description` to mention section grouping (`STARRED/MINE/SHARED`). Verify: `npx tsc --noEmit` passes; `list_my_breath_sessions` returns items each with a `section` field, no `total`/`page`/`pageSize` in output. Spec: `.ai-factory/notes/05-list-sessions-cursor-tool.md`.
+
+---
+
 ## Completed
 
 | Milestone | Date |
