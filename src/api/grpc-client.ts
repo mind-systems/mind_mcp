@@ -3,6 +3,7 @@ import type { ServiceError } from "@grpc/grpc-js";
 
 import {
   BreathSessionServiceClient,
+  SessionSection as ProtoSessionSection,
   StepType,
   TimeOfDay as ProtoTimeOfDay,
   type BreathSessionDto,
@@ -12,6 +13,7 @@ import {
   type ExerciseList,
   type ListSessionsRequest,
   type ListSessionsResponse,
+  type SessionListItem as ProtoSessionListItem,
   type StepDto,
   type UpdateSessionRequest,
 } from "../generated/breath_sessions.js";
@@ -21,6 +23,8 @@ import type {
   BreathSessionListResponse,
   BreathStep,
   CreateBreathSessionPayload,
+  SessionListItem,
+  SessionSection,
   TimeOfDay,
 } from "../types.js";
 import { grpcError } from "./grpc-error.js";
@@ -198,6 +202,21 @@ function mapSessionWithStarred(dto: BreathSessionWithStarredDto): BreathSession 
   };
 }
 
+function mapSection(s: ProtoSessionSection): SessionSection {
+  switch (s) {
+    case ProtoSessionSection.STARRED:
+      return "STARRED";
+    case ProtoSessionSection.MINE:
+      return "MINE";
+    case ProtoSessionSection.SHARED:
+      return "SHARED";
+    // UNRECOGNIZED (and any future member) is intentionally coerced to the
+    // least-privileged grouping; SessionSection has no neutral member.
+    default:
+      return "SHARED";
+  }
+}
+
 function buildCreateRequest(data: CreateBreathSessionPayload): CreateSessionRequest {
   return {
     description: data.description,
@@ -239,22 +258,24 @@ function buildUpdateRequest(
 // ---- Exported functions ----
 
 export async function fetchSessions(
-  page?: number,
-  pageSize?: number,
+  opts?: { cursor?: string; pageSize?: number },
 ): Promise<BreathSessionListResponse> {
   const resp = await callUnary(
     client.listSessions as unknown as GrpcMethod<
       ListSessionsRequest,
       ListSessionsResponse
     >,
-    { page: page ?? 1, pageSize: pageSize ?? 10 },
+    { cursor: opts?.cursor, pageSize: opts?.pageSize ?? 10 },
   );
-  return {
-    data: resp.data.map(mapSessionWithStarred),
-    total: resp.total,
-    page: resp.page,
-    pageSize: resp.pageSize,
-  };
+  const items: SessionListItem[] = resp.items.map(
+    (item: ProtoSessionListItem) => {
+      if (!item.session) {
+        throw new Error("Malformed gRPC response: list item session is missing");
+      }
+      return { session: mapSessionWithStarred(item.session), section: mapSection(item.section) };
+    },
+  );
+  return { items, nextCursor: resp.nextCursor };
 }
 
 export async function fetchSession(id: string): Promise<BreathSession> {
