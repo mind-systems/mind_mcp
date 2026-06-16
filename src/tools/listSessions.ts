@@ -2,27 +2,26 @@ import { z } from "zod";
 import { fetchSessions } from "../api/grpc-client.js";
 
 const inputSchema = {
-  page: z.number().optional().describe("Page number (1-based)"),
-  pageSize: z.number().optional().describe("Number of sessions per page"),
+  pageSize: z.number().optional().describe("Number of sessions per page (default 10)"),
 };
 
 export const listSessionsTool = {
   name: "list_my_breath_sessions",
-  description: "Fetch a compact list of the authenticated user's breathing sessions (id, description, complexity, timeOfDay, shared). Use get_breath_session for full details including exercises.",
+  description:
+    "Fetch a compact list of breathing sessions visible to the authenticated user, grouped by section: STARRED (starred by me), MINE (my own), SHARED (others' shared). Use get_breath_session for full details including exercises.",
   inputSchema,
-  handler: async (input: { page?: number; pageSize?: number }) => {
+  handler: async (input: { pageSize?: number }) => {
     try {
-      const result = await fetchSessions(input.page, input.pageSize);
+      const result = await fetchSessions({ pageSize: input.pageSize });
       const compact = {
-        total: result.total,
-        page: result.page,
-        pageSize: result.pageSize,
-        data: result.data.map(({ id, description, complexity, timeOfDay, shared }) => ({
-          id,
-          description,
-          complexity,
-          timeOfDay,
-          shared,
+        items: result.items.map(({ session, section }) => ({
+          id: session.id,
+          description: session.description,
+          complexity: session.complexity,
+          timeOfDay: session.timeOfDay,
+          shared: session.shared,
+          isStarred: session.isStarred,
+          section,
         })),
       };
       return {

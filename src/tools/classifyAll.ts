@@ -27,16 +27,14 @@ function formatSessionBlock(session: BreathSession): string {
 }
 
 async function fetchAllSessions(): Promise<BreathSession[]> {
-  const firstPage = await fetchSessions(1, 50);
-  const sessions: BreathSession[] = [...firstPage.data];
+  const sessions: BreathSession[] = [];
+  let cursor: string | undefined;
 
-  if (firstPage.total > firstPage.pageSize) {
-    const totalPages = Math.ceil(firstPage.total / firstPage.pageSize);
-    for (let page = 2; page <= totalPages; page++) {
-      const result = await fetchSessions(page, firstPage.pageSize);
-      sessions.push(...result.data);
-    }
-  }
+  do {
+    const result = await fetchSessions({ cursor, pageSize: 50 });
+    sessions.push(...result.items.map((item) => item.session));
+    cursor = result.nextCursor;
+  } while (cursor);
 
   return sessions;
 }
