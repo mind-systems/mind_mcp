@@ -24,11 +24,16 @@ export interface BreathSession {
   updatedAt: string;
 }
 
+export type SessionSection = 'STARRED' | 'MINE' | 'SHARED';
+
+export interface SessionListItem {
+  session: BreathSession;
+  section: SessionSection;
+}
+
 export interface BreathSessionListResponse {
-  data: BreathSession[];
-  total: number;
-  page: number;
-  pageSize: number;
+  items: SessionListItem[];
+  nextCursor: string | undefined;
 }
 
 export interface CreateBreathSessionPayload {
