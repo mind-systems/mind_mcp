@@ -102,6 +102,50 @@ export function timeOfDayToJSON(object: TimeOfDay): string {
 }
 
 /**
+ * Section grouping for ListSessions items. A session may legitimately appear
+ * in more than one section (e.g. starred AND mine) — duplication is intentional
+ * so the client can render each section independently.
+ */
+export enum SessionSection {
+  STARRED = 0,
+  MINE = 1,
+  SHARED = 2,
+  UNRECOGNIZED = -1,
+}
+
+export function sessionSectionFromJSON(object: any): SessionSection {
+  switch (object) {
+    case 0:
+    case "STARRED":
+      return SessionSection.STARRED;
+    case 1:
+    case "MINE":
+      return SessionSection.MINE;
+    case 2:
+    case "SHARED":
+      return SessionSection.SHARED;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return SessionSection.UNRECOGNIZED;
+  }
+}
+
+export function sessionSectionToJSON(object: SessionSection): string {
+  switch (object) {
+    case SessionSection.STARRED:
+      return "STARRED";
+    case SessionSection.MINE:
+      return "MINE";
+    case SessionSection.SHARED:
+      return "SHARED";
+    case SessionSection.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
+/**
  * Maps to BreathStep interface in src/breath-sessions/entities/breath-session.entity.ts
  * duration is in seconds.
  */
@@ -157,6 +201,12 @@ export interface BreathSessionDto {
 export interface BreathSessionWithStarredDto {
   session: BreathSessionDto | undefined;
   isStarred?: boolean | undefined;
+}
+
+/** Wraps a session with its section so the client can render grouped lists. */
+export interface SessionListItem {
+  session: BreathSessionWithStarredDto | undefined;
+  section: SessionSection;
 }
 
 /**
@@ -218,21 +268,20 @@ export interface DeleteSessionResponse {
 }
 
 /**
- * ListSessions — maps to ListQueryDto in src/breath-sessions/dto/breath-session.dto.ts.
+ * ListSessions — cursor-based pagination.
  * Auth is optional: anonymous users see shared sessions only; authenticated users
- * receive is_starred on each item and the full own/starred/shared grouping.
+ * receive is_starred on each item and the full STARRED/MINE/SHARED grouping.
  */
 export interface ListSessionsRequest {
-  page: number;
+  /** opaque cursor; replaces former `page` (tag 1 reuse — lockstep, confirmed safe) */
+  cursor?: string | undefined;
   pageSize: number;
 }
 
-/** Maps to BreathSessionListResponseDto in src/breath-sessions/dto/breath-session.dto.ts */
 export interface ListSessionsResponse {
-  data: BreathSessionWithStarredDto[];
-  total: number;
-  page: number;
-  pageSize: number;
+  items: SessionListItem[];
+  /** removed: data, total, page, page_size */
+  nextCursor?: string | undefined;
 }
 
 /** GetSession — auth optional: authenticated users receive is_starred in the response. */
@@ -823,6 +872,84 @@ export const BreathSessionWithStarredDto: MessageFns<BreathSessionWithStarredDto
       ? BreathSessionDto.fromPartial(object.session)
       : undefined;
     message.isStarred = object.isStarred ?? undefined;
+    return message;
+  },
+};
+
+function createBaseSessionListItem(): SessionListItem {
+  return { session: undefined, section: 0 };
+}
+
+export const SessionListItem: MessageFns<SessionListItem> = {
+  encode(message: SessionListItem, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.session !== undefined) {
+      BreathSessionWithStarredDto.encode(message.session, writer.uint32(10).fork()).join();
+    }
+    if (message.section !== 0) {
+      writer.uint32(16).int32(message.section);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SessionListItem {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSessionListItem();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.session = BreathSessionWithStarredDto.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.section = reader.int32() as any;
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SessionListItem {
+    return {
+      session: isSet(object.session) ? BreathSessionWithStarredDto.fromJSON(object.session) : undefined,
+      section: isSet(object.section) ? sessionSectionFromJSON(object.section) : 0,
+    };
+  },
+
+  toJSON(message: SessionListItem): unknown {
+    const obj: any = {};
+    if (message.session !== undefined) {
+      obj.session = BreathSessionWithStarredDto.toJSON(message.session);
+    }
+    if (message.section !== 0) {
+      obj.section = sessionSectionToJSON(message.section);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<SessionListItem>, I>>(base?: I): SessionListItem {
+    return SessionListItem.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<SessionListItem>, I>>(object: I): SessionListItem {
+    const message = createBaseSessionListItem();
+    message.session = (object.session !== undefined && object.session !== null)
+      ? BreathSessionWithStarredDto.fromPartial(object.session)
+      : undefined;
+    message.section = object.section ?? 0;
     return message;
   },
 };
@@ -1454,13 +1581,13 @@ export const DeleteSessionResponse: MessageFns<DeleteSessionResponse> = {
 };
 
 function createBaseListSessionsRequest(): ListSessionsRequest {
-  return { page: 0, pageSize: 0 };
+  return { cursor: undefined, pageSize: 0 };
 }
 
 export const ListSessionsRequest: MessageFns<ListSessionsRequest> = {
   encode(message: ListSessionsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.page !== 0) {
-      writer.uint32(8).int32(message.page);
+    if (message.cursor !== undefined) {
+      writer.uint32(10).string(message.cursor);
     }
     if (message.pageSize !== 0) {
       writer.uint32(16).int32(message.pageSize);
@@ -1476,11 +1603,11 @@ export const ListSessionsRequest: MessageFns<ListSessionsRequest> = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
-          if (tag !== 8) {
+          if (tag !== 10) {
             break;
           }
 
-          message.page = reader.int32();
+          message.cursor = reader.string();
           continue;
         }
         case 2: {
@@ -1502,7 +1629,7 @@ export const ListSessionsRequest: MessageFns<ListSessionsRequest> = {
 
   fromJSON(object: any): ListSessionsRequest {
     return {
-      page: isSet(object.page) ? globalThis.Number(object.page) : 0,
+      cursor: isSet(object.cursor) ? globalThis.String(object.cursor) : undefined,
       pageSize: isSet(object.pageSize)
         ? globalThis.Number(object.pageSize)
         : isSet(object.page_size)
@@ -1513,8 +1640,8 @@ export const ListSessionsRequest: MessageFns<ListSessionsRequest> = {
 
   toJSON(message: ListSessionsRequest): unknown {
     const obj: any = {};
-    if (message.page !== 0) {
-      obj.page = Math.round(message.page);
+    if (message.cursor !== undefined) {
+      obj.cursor = message.cursor;
     }
     if (message.pageSize !== 0) {
       obj.pageSize = Math.round(message.pageSize);
@@ -1527,29 +1654,23 @@ export const ListSessionsRequest: MessageFns<ListSessionsRequest> = {
   },
   fromPartial<I extends Exact<DeepPartial<ListSessionsRequest>, I>>(object: I): ListSessionsRequest {
     const message = createBaseListSessionsRequest();
-    message.page = object.page ?? 0;
+    message.cursor = object.cursor ?? undefined;
     message.pageSize = object.pageSize ?? 0;
     return message;
   },
 };
 
 function createBaseListSessionsResponse(): ListSessionsResponse {
-  return { data: [], total: 0, page: 0, pageSize: 0 };
+  return { items: [], nextCursor: undefined };
 }
 
 export const ListSessionsResponse: MessageFns<ListSessionsResponse> = {
   encode(message: ListSessionsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    for (const v of message.data) {
-      BreathSessionWithStarredDto.encode(v!, writer.uint32(10).fork()).join();
+    for (const v of message.items) {
+      SessionListItem.encode(v!, writer.uint32(10).fork()).join();
     }
-    if (message.total !== 0) {
-      writer.uint32(16).int32(message.total);
-    }
-    if (message.page !== 0) {
-      writer.uint32(24).int32(message.page);
-    }
-    if (message.pageSize !== 0) {
-      writer.uint32(32).int32(message.pageSize);
+    if (message.nextCursor !== undefined) {
+      writer.uint32(18).string(message.nextCursor);
     }
     return writer;
   },
@@ -1566,31 +1687,15 @@ export const ListSessionsResponse: MessageFns<ListSessionsResponse> = {
             break;
           }
 
-          message.data.push(BreathSessionWithStarredDto.decode(reader, reader.uint32()));
+          message.items.push(SessionListItem.decode(reader, reader.uint32()));
           continue;
         }
         case 2: {
-          if (tag !== 16) {
+          if (tag !== 18) {
             break;
           }
 
-          message.total = reader.int32();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.page = reader.int32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.pageSize = reader.int32();
+          message.nextCursor = reader.string();
           continue;
         }
       }
@@ -1604,32 +1709,22 @@ export const ListSessionsResponse: MessageFns<ListSessionsResponse> = {
 
   fromJSON(object: any): ListSessionsResponse {
     return {
-      data: globalThis.Array.isArray(object?.data)
-        ? object.data.map((e: any) => BreathSessionWithStarredDto.fromJSON(e))
-        : [],
-      total: isSet(object.total) ? globalThis.Number(object.total) : 0,
-      page: isSet(object.page) ? globalThis.Number(object.page) : 0,
-      pageSize: isSet(object.pageSize)
-        ? globalThis.Number(object.pageSize)
-        : isSet(object.page_size)
-        ? globalThis.Number(object.page_size)
-        : 0,
+      items: globalThis.Array.isArray(object?.items) ? object.items.map((e: any) => SessionListItem.fromJSON(e)) : [],
+      nextCursor: isSet(object.nextCursor)
+        ? globalThis.String(object.nextCursor)
+        : isSet(object.next_cursor)
+        ? globalThis.String(object.next_cursor)
+        : undefined,
     };
   },
 
   toJSON(message: ListSessionsResponse): unknown {
     const obj: any = {};
-    if (message.data?.length) {
-      obj.data = message.data.map((e) => BreathSessionWithStarredDto.toJSON(e));
+    if (message.items?.length) {
+      obj.items = message.items.map((e) => SessionListItem.toJSON(e));
     }
-    if (message.total !== 0) {
-      obj.total = Math.round(message.total);
-    }
-    if (message.page !== 0) {
-      obj.page = Math.round(message.page);
-    }
-    if (message.pageSize !== 0) {
-      obj.pageSize = Math.round(message.pageSize);
+    if (message.nextCursor !== undefined) {
+      obj.nextCursor = message.nextCursor;
     }
     return obj;
   },
@@ -1639,10 +1734,8 @@ export const ListSessionsResponse: MessageFns<ListSessionsResponse> = {
   },
   fromPartial<I extends Exact<DeepPartial<ListSessionsResponse>, I>>(object: I): ListSessionsResponse {
     const message = createBaseListSessionsResponse();
-    message.data = object.data?.map((e) => BreathSessionWithStarredDto.fromPartial(e)) || [];
-    message.total = object.total ?? 0;
-    message.page = object.page ?? 0;
-    message.pageSize = object.pageSize ?? 0;
+    message.items = object.items?.map((e) => SessionListItem.fromPartial(e)) || [];
+    message.nextCursor = object.nextCursor ?? undefined;
     return message;
   },
 };
