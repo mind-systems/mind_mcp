@@ -56,7 +56,7 @@ Breaking proto change from API team: `ListSessionsRequest/Response` drop offset 
 
 The `breath_sessions.proto` contract removed the `ReplaceSession` RPC + `ReplaceSessionRequest`. This repo never calls it (the `set_time_of_day` tool already uses `updateSession` PATCH), so this is a pure proto-sync + regen — no TypeScript change — mirroring the Phase 6 copy/regen milestone.
 
-- [ ] **Copy updated proto and regenerate stubs** — Sync `proto/breath_sessions.proto` to the current contract and regenerate per the proto-sync workflow in `CLAUDE.md` (never hand-edit generated files); run `npm run proto:gen` (`bash scripts/gen_proto.sh`) to regenerate `src/generated/breath_sessions.ts` (the `ReplaceSession` method + `ReplaceSessionRequest` interface disappear); commit both files together. No edits to `src/tools/*` or `src/api/grpc-client.ts`. Verify: `npx tsc --noEmit` passes; `grep -rn "ReplaceSession" src` is empty. Spec: `.ai-factory/notes/06-sync-proto-drop-replacesession.md`.
+- [x] **Copy updated proto and regenerate stubs 2** — Sync `proto/breath_sessions.proto` to the current contract and regenerate per the proto-sync workflow in `CLAUDE.md` (never hand-edit generated files); run `npm run proto:gen` (`bash scripts/gen_proto.sh`) to regenerate `src/generated/breath_sessions.ts` (the `ReplaceSession` method + `ReplaceSessionRequest` interface disappear); commit both files together. No edits to `src/tools/*` or `src/api/grpc-client.ts`. Verify: `npx tsc --noEmit` passes; `grep -rn "ReplaceSession" src` is empty. Spec: `.ai-factory/notes/06-sync-proto-drop-replacesession.md`. [4m 43s]
 
 ---
 

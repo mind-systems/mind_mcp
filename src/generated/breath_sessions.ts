@@ -234,19 +234,6 @@ export interface UpdateSessionRequest {
   timeOfDay?: TimeOfDay | undefined;
 }
 
-/**
- * ReplaceSession — maps to ReplaceBreathSessionDto in src/breath-sessions/dto/breath-session.dto.ts.
- * PUT semantics: description, exercises, and shared are required; time_of_day is optional
- * and resets to null when absent.
- */
-export interface ReplaceSessionRequest {
-  id: string;
-  description: string;
-  exercises: ExerciseDto[];
-  shared: boolean;
-  timeOfDay?: TimeOfDay | undefined;
-}
-
 /** UpdateSessionSettings — maps to UpdateBreathSessionSettingsDto in src/breath-sessions/dto/breath-session-settings.dto.ts */
 export interface UpdateSessionSettingsRequest {
   id: string;
@@ -1198,136 +1185,6 @@ export const UpdateSessionRequest: MessageFns<UpdateSessionRequest> = {
   },
 };
 
-function createBaseReplaceSessionRequest(): ReplaceSessionRequest {
-  return { id: "", description: "", exercises: [], shared: false, timeOfDay: undefined };
-}
-
-export const ReplaceSessionRequest: MessageFns<ReplaceSessionRequest> = {
-  encode(message: ReplaceSessionRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
-    }
-    if (message.description !== "") {
-      writer.uint32(18).string(message.description);
-    }
-    for (const v of message.exercises) {
-      ExerciseDto.encode(v!, writer.uint32(26).fork()).join();
-    }
-    if (message.shared !== false) {
-      writer.uint32(32).bool(message.shared);
-    }
-    if (message.timeOfDay !== undefined) {
-      writer.uint32(40).int32(message.timeOfDay);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): ReplaceSessionRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseReplaceSessionRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.description = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.exercises.push(ExerciseDto.decode(reader, reader.uint32()));
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.shared = reader.bool();
-          continue;
-        }
-        case 5: {
-          if (tag !== 40) {
-            break;
-          }
-
-          message.timeOfDay = reader.int32() as any;
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): ReplaceSessionRequest {
-    return {
-      id: isSet(object.id) ? globalThis.String(object.id) : "",
-      description: isSet(object.description) ? globalThis.String(object.description) : "",
-      exercises: globalThis.Array.isArray(object?.exercises)
-        ? object.exercises.map((e: any) => ExerciseDto.fromJSON(e))
-        : [],
-      shared: isSet(object.shared) ? globalThis.Boolean(object.shared) : false,
-      timeOfDay: isSet(object.timeOfDay)
-        ? timeOfDayFromJSON(object.timeOfDay)
-        : isSet(object.time_of_day)
-        ? timeOfDayFromJSON(object.time_of_day)
-        : undefined,
-    };
-  },
-
-  toJSON(message: ReplaceSessionRequest): unknown {
-    const obj: any = {};
-    if (message.id !== "") {
-      obj.id = message.id;
-    }
-    if (message.description !== "") {
-      obj.description = message.description;
-    }
-    if (message.exercises?.length) {
-      obj.exercises = message.exercises.map((e) => ExerciseDto.toJSON(e));
-    }
-    if (message.shared !== false) {
-      obj.shared = message.shared;
-    }
-    if (message.timeOfDay !== undefined) {
-      obj.timeOfDay = timeOfDayToJSON(message.timeOfDay);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<ReplaceSessionRequest>, I>>(base?: I): ReplaceSessionRequest {
-    return ReplaceSessionRequest.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<ReplaceSessionRequest>, I>>(object: I): ReplaceSessionRequest {
-    const message = createBaseReplaceSessionRequest();
-    message.id = object.id ?? "";
-    message.description = object.description ?? "";
-    message.exercises = object.exercises?.map((e) => ExerciseDto.fromPartial(e)) || [];
-    message.shared = object.shared ?? false;
-    message.timeOfDay = object.timeOfDay ?? undefined;
-    return message;
-  },
-};
-
 function createBaseUpdateSessionSettingsRequest(): UpdateSessionSettingsRequest {
   return { id: "", starred: false };
 }
@@ -2106,16 +1963,6 @@ export const BreathSessionServiceService = {
     responseSerialize: (value: BreathSessionDto): Buffer => Buffer.from(BreathSessionDto.encode(value).finish()),
     responseDeserialize: (value: Buffer): BreathSessionDto => BreathSessionDto.decode(value),
   },
-  replaceSession: {
-    path: "/mind.BreathSessionService/ReplaceSession" as const,
-    requestStream: false as const,
-    responseStream: false as const,
-    requestSerialize: (value: ReplaceSessionRequest): Buffer =>
-      Buffer.from(ReplaceSessionRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): ReplaceSessionRequest => ReplaceSessionRequest.decode(value),
-    responseSerialize: (value: BreathSessionDto): Buffer => Buffer.from(BreathSessionDto.encode(value).finish()),
-    responseDeserialize: (value: Buffer): BreathSessionDto => BreathSessionDto.decode(value),
-  },
   updateSessionSettings: {
     path: "/mind.BreathSessionService/UpdateSessionSettings" as const,
     requestStream: false as const,
@@ -2146,7 +1993,6 @@ export interface BreathSessionServiceServer extends UntypedServiceImplementation
   batchGetSessions: handleUnaryCall<BatchGetSessionsRequest, BatchGetSessionsResponse>;
   getSession: handleUnaryCall<GetSessionRequest, BreathSessionWithStarredDto>;
   updateSession: handleUnaryCall<UpdateSessionRequest, BreathSessionDto>;
-  replaceSession: handleUnaryCall<ReplaceSessionRequest, BreathSessionDto>;
   updateSessionSettings: handleUnaryCall<UpdateSessionSettingsRequest, UpdateSessionSettingsResponse>;
   deleteSession: handleUnaryCall<DeleteSessionRequest, DeleteSessionResponse>;
 }
@@ -2238,21 +2084,6 @@ export interface BreathSessionServiceClient extends Client {
   ): ClientUnaryCall;
   updateSession(
     request: UpdateSessionRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: BreathSessionDto) => void,
-  ): ClientUnaryCall;
-  replaceSession(
-    request: ReplaceSessionRequest,
-    callback: (error: ServiceError | null, response: BreathSessionDto) => void,
-  ): ClientUnaryCall;
-  replaceSession(
-    request: ReplaceSessionRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: BreathSessionDto) => void,
-  ): ClientUnaryCall;
-  replaceSession(
-    request: ReplaceSessionRequest,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: BreathSessionDto) => void,
