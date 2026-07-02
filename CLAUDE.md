@@ -24,12 +24,7 @@ See `.ai-factory/ARCHITECTURE.md` for folder structure, dependency rules, and co
 
 ## Dependencies on other sub-projects
 
-- **mind_api** — this package is a client of the API. It depends on:
-  - Personal Access Tokens endpoints (`POST/GET/DELETE /auth/tokens`)
-  - Breath Sessions endpoints (`GET /breath_sessions/list`, `GET /breath_sessions/:id`, `POST /breath_sessions`, `PATCH /breath_sessions/:id`)
-  - The `timeOfDay` field on breath sessions
-
-DTO shapes consumed here must stay in sync with the API response contracts.
+- **mind_api** — this package is a **gRPC client** of the API. Stubs are generated from the local proto snapshot (`proto/*.proto` → `src/generated/`) via `npm run proto:gen`; the services consumed today are auth (personal access tokens) and breath sessions. Contract changes arrive by copying updated protos from `mind_api/proto/` and regenerating — see Proto contract ownership below.
 
 ## Proto contract ownership
 
