@@ -26,6 +26,15 @@ See `.ai-factory/ARCHITECTURE.md` for folder structure, dependency rules, and co
 
 - **mind_api** — this package is a **gRPC client** of the API. Stubs are generated from the local proto snapshot (`proto/*.proto` → `src/generated/`) via `npm run proto:gen`; the services consumed today are auth (personal access tokens) and breath sessions. Contract changes arrive by copying updated protos from `mind_api/proto/` and regenerating — see Proto contract ownership below.
 
+## Configuration & logging
+
+Environment-based, no OAuth flow:
+- `MIND_GRPC_URL` — gRPC server address (e.g. `localhost:50051`)
+- `MIND_GRPC_TLS` — `"true"` enables TLS on the channel; defaults to `"false"`
+- `MIND_PAT_TOKEN` — Personal Access Token (`pat_` prefix), sent as Bearer; read from env only, never logged
+
+**Logs go to stderr only — stdout is reserved for the MCP protocol.** Writing anything else to stdout breaks the client connection.
+
 ## Proto contract ownership
 
 `mind_api/proto/` is the single source of truth. This project **must not modify `.proto` files**.
