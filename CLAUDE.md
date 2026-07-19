@@ -37,7 +37,4 @@ Environment-based, no OAuth flow:
 
 ## Proto contract ownership
 
-`mind_api/proto/` is the single source of truth. This project **must not modify `.proto` files**.
-
-- When `mind_api/proto/` changes, copy the updated files into `mind_mcp/proto/` and run `npm run proto:gen` to regenerate stubs.
-- Never symlink — copy explicitly so the proto snapshot in this repo is stable and independent of `mind_api` checkout state.
+Consumer of `mind_api/proto/` (see root CLAUDE.md for ownership policy). On upstream change, copy the updated files into `mind_mcp/proto/` and run `npm run proto:gen` to regenerate stubs.
