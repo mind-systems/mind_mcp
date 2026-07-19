@@ -1,7 +1,3 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code when working with the Mind MCP Server.
-
 ## Commands
 
 ```bash
